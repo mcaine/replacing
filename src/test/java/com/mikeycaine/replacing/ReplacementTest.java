@@ -9,8 +9,7 @@ public class ReplacementTest {
     @Test
     public void test() {
 
-        class SomeClass {
-        };
+        class SomeClass {};
         SomeClass someObj = new SomeClass();
 
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", sc -> "hello");
@@ -23,8 +22,7 @@ public class ReplacementTest {
     @Test(expected = IllegalArgumentException.class)
     public void test_NullTag() {
 
-        class SomeClass {
-        };
+        class SomeClass {};
 
         @SuppressWarnings("unused")
         Replacement<SomeClass> replacement = Replacement.replacing(null, sc -> "hello");
@@ -33,9 +31,7 @@ public class ReplacementTest {
     @Test(expected = IllegalArgumentException.class)
     public void test_NullFunction() {
 
-        class SomeClass {
-        }
-        ;
+        class SomeClass {};
 
         @SuppressWarnings("unused")
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", null);
@@ -44,8 +40,7 @@ public class ReplacementTest {
     @Test
     public void test_FunctionThrowsException() {
 
-        class SomeClass {
-        };
+        class SomeClass {};
         SomeClass someObj = new SomeClass();
 
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", sc -> {
@@ -63,8 +58,7 @@ public class ReplacementTest {
 
     @Test
     public void test_TemplateIsNull() {
-        class SomeClass {
-        }
+        class SomeClass {}
         ;
         SomeClass someObj = new SomeClass();
 
@@ -80,8 +74,7 @@ public class ReplacementTest {
 
     @Test
     public void test_ObjectIsNull() {
-        class SomeClass {
-        };
+        class SomeClass {};
 
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", sc -> {
             throw new RuntimeException("Wut?");
@@ -95,8 +88,7 @@ public class ReplacementTest {
 
     @Test
     public void test_ObjectIsNullNotReplacingNull() {
-        class SomeClass {
-        };
+        class SomeClass {};
 
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", sc -> {
             throw new RuntimeException("Wut?");

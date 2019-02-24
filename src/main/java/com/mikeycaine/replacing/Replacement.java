@@ -21,8 +21,6 @@ public final class Replacement<T> {
         return tag;
     }
 
-    ;
-
     String replaceUsing(T t, String text, boolean replaceTagIfValueNull, boolean replaceTagIfValueBlank, boolean catchExceptions) {
         if (text == null) {
             return null;
