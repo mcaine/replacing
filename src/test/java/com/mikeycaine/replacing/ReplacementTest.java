@@ -58,8 +58,7 @@ public class ReplacementTest {
 
     @Test
     public void test_TemplateIsNull() {
-        class SomeClass {}
-        ;
+        class SomeClass {};
         SomeClass someObj = new SomeClass();
 
         Replacement<SomeClass> replacement = Replacement.replacing("{greeting}", sc -> {

@@ -1,6 +1,5 @@
 package com.mikeycaine.replacing;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,164 +7,161 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.mikeycaine.replacing.Replacement.replacing;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 
 
 public class ReplacerTest {
 
-    final static List<Replacement<Person>> listOfPersonReplacements = Arrays.asList(
+    final Person mike = new Person("Mike", 51);
+    final Person fran = new Person("Fran", 21);
+    final Person blankName = new Person("    ", 69);
+    final Person bobby = new Person("Bobby", 69);
+    final Person anonymous = new Person(null, 21);
+
+    final static Replacements<Person> replacements = new Replacements<>(
         replacing("{name}", p -> p.getName()),
-        replacing("{age}", p -> String.valueOf(p.getAge()))
+        replacing("{age}",  p -> String.valueOf(p.getAge()))
     );
 
-    final static Replacements<Person> replacements = new Replacements<>(listOfPersonReplacements);
-
-
-    final static Replacements<Person> replacementsOf = new Replacements<>(
-        replacing("{name}", p -> p.getName()),
-        replacing("{age}", p -> String.valueOf(p.getAge()))
-    );
-
-
-    final static Replacements<Person> replacementsThrowing = new Replacements<>(Arrays.asList(
-        replacing("{name}", p -> {
-            throw new Exception("OOPS");
-        }),
-        replacing("{age}", p -> String.valueOf(p.getAge()))
-    )
-    );
-
-    final static Replacements<Person> redactedReplacements = replacementsThrowing
-        .and(replacing("{name}", p -> "REDACTED"));
-
-    final static Replacements<Person> composedReplacements = replacements
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "WRONG"))
-        .and(replacing("{name}", p -> "CORRECT"));
-
-    final static Replacements<Person> composed2 = redactedReplacements.and(replacements);
-
-    final static Replacements<Person> capitalisedReplacements = new Replacements<>(Arrays.asList(
-        replacing("{name}", p -> p.getName().toUpperCase()),
-        replacing("{age}", p -> String.valueOf(p.getAge()))
-    ));
-
-    final static Replacements<Animal> animalReplacements = new Replacements<>(Arrays.asList(
+    final static Replacements<Animal> animalReplacements = new Replacements<>(
         replacing("{name}", (Animal a) -> a.getAnimalName())
-    ));
+    );
+
+    final static Replacements<Person> replacementsThrowing = new Replacements<>(
+        replacing("{name}", p -> {throw new Exception("OOPS");}),
+        replacing("{age}", p -> String.valueOf(p.getAge()))
+    );
 
     @Test
-    public void testReplacer() {
-        Person mike = new Person("Mike", 51);
-
+    public void testReplacer_Using() {
         String result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is Mike and my age is 51")));
+        Assert.assertThat(result, is(equalTo("My name is Mike and my age is 51")));
 
-        // won't compile
-        //result = Replacer.using(mike).replaceText("Some text", animalReplacements);
-
-        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", capitalisedReplacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is MIKE and my age is 51")));
-
-        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", redactedReplacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is REDACTED and my age is 51")));
-
-        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", composedReplacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is CORRECT and my age is 51")));
-
-        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", replacementsThrowing);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is  and my age is 51")));
-
-        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", composed2);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is Mike and my age is 51")));
-
-
-        Person fran = new Person("Fran", 21);
         result = Replacer.using(fran).replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is Fran and my age is 21")));
+        Assert.assertThat(result, is(equalTo("My name is Fran and my age is 21")));
+    }
 
-        result = Replacer.using(fran).replaceText("My name is {name} and my age is {age}", capitalisedReplacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is FRAN and my age is 21")));
+    @Test
+    public void testReplacer_CanConstructFromList() {
+
+        List<Replacement<Person>> listOfPersonReplacements = Arrays.asList(
+            replacing("{name}", p -> p.getName()),
+            replacing("{age}", p -> String.valueOf(p.getAge()))
+        );
+
+        Replacements<Person> replacementsFromList = new Replacements<>(listOfPersonReplacements);
+
+        String result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", replacementsFromList);
+        Assert.assertThat(result, is(equalTo("My name is Mike and my age is 51")));
+
+        result = Replacer.using(fran).replaceText("My name is {name} and my age is {age}", replacementsFromList);
+        Assert.assertThat(result, is(equalTo("My name is Fran and my age is 21")));
+    }
+
+    @Test
+    public void test_CanComposeReplacements() {
+
+        Replacements<Person> composedReplacements = replacements
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{age}",  p -> "A SECRET"))
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{name}", p -> "WRONG"))
+            .and(replacing("{name}", p -> "CORRECT"));
+
+        String result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", composedReplacements);
+        Assert.assertThat(result, is(equalTo("My name is CORRECT and my age is A SECRET")));
+
+        Replacements<Person> composed2 = composedReplacements.and(replacements);
+        result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", composed2);
+        Assert.assertThat(result, is(equalTo("My name is Mike and my age is 51")));
+    }
+
+
+    @Test
+    public void testReplacer_CatchesExceptions() {
+        Replacements<Person> replacementsThrowing = new Replacements<>(Arrays.asList(
+            replacing("{name}", p -> {throw new Exception("OOPS");}),
+            replacing("{age}", p -> String.valueOf(p.getAge()))
+        ));
+
+        String result = Replacer.using(mike).replaceText("My name is {name} and my age is {age}", replacementsThrowing);
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 51")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfValueIsNullByDefault() {
-        Person anonymous = new Person(null, 21);
+        Replacements<Person> replacements = new Replacements<>(
+            replacing("{name}", p -> p.getName()),
+            replacing("{age}",  p -> String.valueOf(p.getAge()))
+        );
+
         String result = Replacer.using(anonymous).replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is  and my age is 21")));
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 21")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfValueIsNull() {
-        Person anonymous = new Person(null, 21);
         String result = Replacer.using(anonymous)
             .replaceTagsIfValueNull()
             .replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is  and my age is 21")));
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 21")));
     }
 
     @Test
     public void testReplacer_LeavesTagsIfValueIsNull() {
-        Person anonymous = new Person(null, 21);
         String result = Replacer.using(anonymous)
             .dontReplaceTagsIfValueNull()
             .replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is {name} and my age is 21")));
+        Assert.assertThat(result, is(equalTo("My name is {name} and my age is 21")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfValueBlankByDefault() {
-        Person blankName = new Person("    ", 69);
         String result = Replacer.using(blankName).replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is      and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is      and my age is 69")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfValueBlank() {
-        Person blankName = new Person("    ", 69);
         String result = Replacer.using(blankName).replaceTagsIfValueBlank().replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is      and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is      and my age is 69")));
     }
 
     @Test
     public void testReplacer_LeavesTagsIfValueBlank() {
-        Person blankName = new Person("    ", 69);
         String result = Replacer.using(blankName).dontReplaceTagsIfValueBlank().replaceText("My name is {name} and my age is {age}", replacements);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is {name} and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is {name} and my age is 69")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfThrowingByDefault() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is  and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 69")));
     }
 
     @Test
     public void testReplacer_RemovesTagsIfThrowing() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .replaceTagsIfValueNull()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is  and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 69")));
     }
 
     @Test
     public void testReplacer_LeavesTagsIfThrowing() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .dontReplaceTagsIfValueNull()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is {name} and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is {name} and my age is 69")));
     }
 
     @Test(expected = RuntimeException.class)
     public void testReplacer_CanThrow() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .notCatchingExceptions()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
@@ -173,32 +169,29 @@ public class ReplacerTest {
 
 
     public void testReplacer_CatchingExceptions() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .catchingExceptions()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
 
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is {name} and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is {name} and my age is 69")));
     }
 
     public void testReplacer_CatchingExceptions_NotReplacingTags() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .catchingExceptions()
             .dontReplaceTagsIfValueNull()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
 
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is {name} and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is {name} and my age is 69")));
     }
 
     public void testReplacer_CatchingExceptions_ReplaceTagsIfValueNull() {
-        Person bobby = new Person("Bobby", 69);
         String result = Replacer.using(bobby)
             .catchingExceptions()
             .replaceTagsIfValueNull()
             .replaceText("My name is and my age is ", replacementsThrowing);
 
-        Assert.assertThat(result, CoreMatchers.is(CoreMatchers.equalTo("My name is and my age is 69")));
+        Assert.assertThat(result, is(equalTo("My name is and my age is 69")));
     }
 
     class Animal {
