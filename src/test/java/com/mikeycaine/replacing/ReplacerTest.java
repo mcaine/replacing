@@ -82,7 +82,7 @@ public class ReplacerTest {
 
 
     @Test
-    public void testReplacer_CatchesExceptions() {
+    public void testReplacer_CatchesExceptions_ByDefault() {
         Replacements<Person> replacementsThrowing = new Replacements<>(Arrays.asList(
             replacing("{name}", p -> {throw new Exception("OOPS");}),
             replacing("{age}", p -> String.valueOf(p.getAge()))
@@ -160,13 +160,25 @@ public class ReplacerTest {
         Assert.assertThat(result, is(equalTo("My name is {name} and my age is 69")));
     }
 
+    @Test
+    public void testReplacer_CatchesExceptions() {
+        Replacements<Person> replacementsThrowing = new Replacements<>(Arrays.asList(
+            replacing("{name}", p -> {throw new Exception("OOPS");}),
+            replacing("{age}", p -> String.valueOf(p.getAge()))
+        ));
+
+        String result = Replacer.using(mike)
+            .catchingExceptions()
+            .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
+        Assert.assertThat(result, is(equalTo("My name is  and my age is 51")));
+    }
+
     @Test(expected = RuntimeException.class)
     public void testReplacer_CanThrow() {
         String result = Replacer.using(bobby)
             .notCatchingExceptions()
             .replaceText("My name is {name} and my age is {age}", replacementsThrowing);
     }
-
 
     public void testReplacer_CatchingExceptions() {
         String result = Replacer.using(bobby)
